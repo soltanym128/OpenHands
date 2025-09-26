@@ -25,7 +25,7 @@ from openhands.runtime.builder import DockerRuntimeBuilder
 from openhands.runtime.impl.action_execution.action_execution_client import (
     ActionExecutionClient,
 )
-from openhands.runtime.impl.docker.containers import stop_all_containers
+from openhands.runtime.impl.docker.containers import stop_all_containers, stop_and_remove_all_containers
 from openhands.runtime.plugins import PluginRequirement
 from openhands.runtime.runtime_status import RuntimeStatus
 from openhands.runtime.utils import find_available_tcp_port
@@ -104,7 +104,7 @@ class DockerRuntime(ActionExecutionClient):
     ):
         if not DockerRuntime._shutdown_listener_id:
             DockerRuntime._shutdown_listener_id = add_shutdown_listener(
-                lambda: stop_all_containers(CONTAINER_NAME_PREFIX)
+                lambda: stop_and_remove_all_containers(CONTAINER_NAME_PREFIX)
             )
 
         self.config = config
@@ -605,10 +605,15 @@ class DockerRuntime(ActionExecutionClient):
 
         if self.config.sandbox.keep_runtime_alive or self.attach_to_existing:
             return
+        
+        # Use the appropriate cleanup function based on whether we want to remove containers
         close_prefix = (
             CONTAINER_NAME_PREFIX if rm_all_containers else self.container_name
         )
-        stop_all_containers(close_prefix)
+        
+        # Always remove containers completely rather than leaving them in 'exited' state
+        # This prevents accumulation of "improperly killed" containers
+        stop_and_remove_all_containers(close_prefix)
         self._release_port_locks()
 
     def _release_port_locks(self) -> None:

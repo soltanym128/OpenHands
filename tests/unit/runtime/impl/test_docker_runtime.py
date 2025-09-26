@@ -46,7 +46,7 @@ def llm_registry():
     return MagicMock(spec=LLMRegistry)
 
 
-@patch('openhands.runtime.impl.docker.docker_runtime.stop_all_containers')
+@patch('openhands.runtime.impl.docker.docker_runtime.stop_and_remove_all_containers')
 def test_container_stopped_when_keep_runtime_alive_false(
     mock_stop_containers, mock_docker_client, config, event_stream, llm_registry
 ):
@@ -61,7 +61,7 @@ def test_container_stopped_when_keep_runtime_alive_false(
     mock_stop_containers.assert_called_once_with('openhands-runtime-test-sid')
 
 
-@patch('openhands.runtime.impl.docker.docker_runtime.stop_all_containers')
+@patch('openhands.runtime.impl.docker.docker_runtime.stop_and_remove_all_containers')
 def test_container_not_stopped_when_keep_runtime_alive_true(
     mock_stop_containers, mock_docker_client, config, event_stream, llm_registry
 ):
