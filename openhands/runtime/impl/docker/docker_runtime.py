@@ -25,7 +25,7 @@ from openhands.runtime.builder import DockerRuntimeBuilder
 from openhands.runtime.impl.action_execution.action_execution_client import (
     ActionExecutionClient,
 )
-from openhands.runtime.impl.docker.containers import stop_all_containers, stop_and_remove_all_containers
+from openhands.runtime.impl.docker.containers import stop_all_containers, stop_and_remove_all_containers, cleanup_orphaned_containers
 from openhands.runtime.plugins import PluginRequirement
 from openhands.runtime.runtime_status import RuntimeStatus
 from openhands.runtime.utils import find_available_tcp_port
@@ -759,6 +759,18 @@ class DockerRuntime(ActionExecutionClient):
             pass
         finally:
             docker_client.close()
+
+    @classmethod
+    def cleanup_orphaned_containers(cls, max_age_hours: int = 24) -> int:
+        """Clean up orphaned OpenHands containers older than the specified age.
+        
+        Args:
+            max_age_hours: Maximum age in hours for containers to be considered orphaned
+            
+        Returns:
+            Number of containers cleaned up
+        """
+        return cleanup_orphaned_containers(CONTAINER_NAME_PREFIX, max_age_hours)
 
     def get_action_execution_server_startup_command(self) -> list[str]:
         return get_action_execution_server_startup_command(
